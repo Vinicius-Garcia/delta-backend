@@ -18,5 +18,6 @@ Extensões necessárias do PHP:
 ## Como executar o projeto
 
 - Mudar no app/Config/Database o username, password e database
+- usar o comando composer install
 - usar o comando php spark migrate para criação das tabelas
 - php spark serve para executar a api
