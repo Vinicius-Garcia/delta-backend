@@ -33,23 +33,30 @@ class Usuario extends ResourceController
                 }
             }
 
+            $email = $input['email'];
+
+            // Verifica se o email já existe na base de dados
+            $existingUser = $this->usuarioModel->where('email', $email)->first();
+            if ($existingUser) {
+                return $this->response->setStatusCode(400)->setJSON(['status' => 'error', 'message' => 'Email já está em uso']);
+            }
+
             $data = [
                 'nome' => $input['nome'],
                 'email' => $input['email'],
-                'password' => $input['password']
+                'password' => password_hash($input['password'], PASSWORD_BCRYPT)  // Hash da senha antes de salvar
             ];
 
             if ($this->usuarioModel->insert($data)) {
-                return $this->response->setStatusCode(201)->setJSON(['status' => 'success', 'message' => 'Usuario criado com sucesso']);
+                return $this->response->setStatusCode(201)->setJSON(['status' => 'success', 'message' => 'Usuário criado com sucesso']);
             } else {
-                return $this->response->setStatusCode(500)->setJSON(['status' => 'error', 'message' => 'Falha ao criar o usuario']);
+                return $this->response->setStatusCode(500)->setJSON(['status' => 'error', 'message' => 'Falha ao criar o usuário']);
             }
         } catch (Exception $e) {
             return $this->response->setStatusCode(500)->setJSON(['status' => 'error', 'message' => $e->getMessage()]);
         }
     }
-
-    //metodo para validar o usuario
+                //metodo para validar o usuario
     public function login()
     {
         try {
@@ -68,16 +75,16 @@ class Usuario extends ResourceController
 
             $email = $input['email'];
             $password = $input['password'];
-            var_dump($password);
-            var_dump($email);
+
             $user = $this->usuarioModel->where('email', $email)->first();
 
             if (!$user) {
                 return $this->response->setStatusCode(401)->setJSON(['status' => 'error', 'message' => 'Email ou senha incorretos']);
             }
 
-            if ($password !=  $user['password']) {
-                return $this->response->setStatusCode(401)->setJSON(['status' => 'error', 'message' => 'senha incorretos']);
+            // Verifique se a senha fornecida corresponde ao hash armazenado
+            if (!password_verify($password, $user['password'])) {
+                return $this->response->setStatusCode(401)->setJSON(['status' => 'error', 'message' => 'Senha incorreta']);
             }
 
             return $this->response->setStatusCode(200)->setJSON(['status' => 'success', 'message' => 'Login realizado com sucesso', 'data' => ['user_id' => $user['id'], 'nome' => $user['nome'], 'email' => $user['email']]]);
